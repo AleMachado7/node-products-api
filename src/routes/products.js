@@ -34,7 +34,7 @@ router.get("/", async (req, res) => {
   } catch (error) {
     res
       .status(500)
-      .json({ message: "Something went wrong.", errorMessage: error })
+      .json({ message: "Something went wrong.", errorMessage: error.message })
   }
 })
 
@@ -51,16 +51,31 @@ router.get("/:id", [validId, getProduct], async (req, res) => {
   } catch (error) {
     res
       .status(500)
-      .json({ message: "Something went wrong.", errorMessage: error })
+      .json({ message: "Something went wrong.", errorMessage: error.message })
   }
 })
 
 // Update a product information based on ID
-router.patch("/:id", validId, async (req, res) => {})
+router.patch("/:id", [validId, getProduct], async (req, res) => {
+  if (req.body.id) {
+    delete req.body.id
+  }
+  Object.assign(res.product, req.body)
+
+  try {
+    const updatedProduct = await res.product.save()
+    res.json(updatedProduct)
+  } catch (error) {
+    res
+      .status(400)
+      .json({ message: "Something went wrong.", errorMessage: error.message })
+  }
+})
 
 // Delete one product by ID
 router.delete("/:id", (req, res) => {})
 
+// middleware function to get product based on ID
 async function getProduct(req, res, next) {
   let product
   try {
@@ -68,10 +83,10 @@ async function getProduct(req, res, next) {
     if (product === null) {
       return res.status(404).json({ message: "Product not found." })
     }
-  } catch (err) {
+  } catch (error) {
     return res
       .status(500)
-      .json({ message: "Something went wrong", errorMessage: err.message })
+      .json({ message: "Something went wrong", errorMessage: error.message })
   }
 
   res.product = product
