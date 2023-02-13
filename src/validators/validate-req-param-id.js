@@ -1,7 +1,13 @@
-const { param } = require("express-validator")
+const mongoose = require("mongoose")
 
-const validId = [
-  param("id").isMongoId().withMessage("O Id informado é inválido!"),
-]
+const validId = function (req, res, next) {
+  if (!mongoose.isValidObjectId(req.params.id)) {
+    return res.status(400).json({
+      message: "Something went wrong.",
+      errorMessage: "O Id informado é inválido.",
+    })
+  }
+  next()
+}
 
 module.exports = validId

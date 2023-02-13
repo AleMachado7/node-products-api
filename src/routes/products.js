@@ -39,7 +39,7 @@ router.get("/", async (req, res) => {
 })
 
 // Get one specific product by ID
-router.get("/:id", validId, async (req, res) => {
+router.get("/:id", [validId, getProduct], async (req, res) => {
   const errors = validationResult(req)
   if (!errors.isEmpty()) {
     return res.status(400).json({ error: errors.array() })
@@ -56,9 +56,26 @@ router.get("/:id", validId, async (req, res) => {
 })
 
 // Update a product information based on ID
-router.patch("/:id", (req, res) => {})
+router.patch("/:id", validId, async (req, res) => {})
 
 // Delete one product by ID
 router.delete("/:id", (req, res) => {})
+
+async function getProduct(req, res, next) {
+  let product
+  try {
+    product = await Product.findById(req.params.id)
+    if (product === null) {
+      return res.status(404).json({ message: "Product not found." })
+    }
+  } catch (err) {
+    return res
+      .status(500)
+      .json({ message: "Something went wrong", errorMessage: err.message })
+  }
+
+  res.product = product
+  next()
+}
 
 module.exports = router
