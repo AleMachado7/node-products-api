@@ -3,6 +3,7 @@ const router = express.Router()
 const Product = require("../models/products")
 const { validationResult } = require("express-validator")
 const requestSchema = require("../validators/validate-request-schema")
+const validId = require("../validators/validate-req-param-id")
 
 // Create a new product
 router.post("/", requestSchema, async (req, res) => {
@@ -38,7 +39,21 @@ router.get("/", async (req, res) => {
 })
 
 // Get one specific product by ID
-router.get("/:id", async (req, res) => {})
+router.get("/:id", validId, async (req, res) => {
+  const errors = validationResult(req)
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ error: errors.array() })
+  }
+
+  try {
+    const product = await Product.findById(req.params.id)
+    res.json(product)
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Something went wrong.", errorMessage: error })
+  }
+})
 
 // Update a product information based on ID
 router.patch("/:id", (req, res) => {})
