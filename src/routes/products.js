@@ -73,7 +73,17 @@ router.patch("/:id", [validId, getProduct], async (req, res) => {
 })
 
 // Delete one product by ID
-router.delete("/:id", (req, res) => {})
+router.delete("/:id", [validId, getProduct], async (req, res) => {
+  try {
+    const deletedProduct = res.product
+    await res.product.remove()
+    res.json({ message: "Product deleted.", deletedProduct })
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Something went wrong.", errorMessage: error.message })
+  }
+})
 
 // middleware function to get product based on ID
 async function getProduct(req, res, next) {
