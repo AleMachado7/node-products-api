@@ -2,11 +2,12 @@ const express = require("express")
 const router = express.Router()
 const Product = require("../models/products")
 const { validationResult } = require("express-validator")
-const requestSchema = require("../validators/validate-request-schema")
-const validId = require("../validators/validate-req-param-id")
+const validatePostSchema = require("../validators/validate-request-schema")
+const validateRequestId = require("../validators/validate-req-param-id")
+const getProduct = require("../middlewares/get-product")
 
 // Create a new product
-router.post("/", requestSchema, async (req, res) => {
+router.post("/", validatePostSchema, async (req, res) => {
   const errors = validationResult(req)
   if (!errors.isEmpty()) {
     return res.status(400).json({ error: errors.array() })
@@ -39,7 +40,7 @@ router.get("/", async (req, res) => {
 })
 
 // Get one specific product by ID
-router.get("/:id", [validId, getProduct], async (req, res) => {
+router.get("/:id", [validateRequestId, getProduct], async (req, res) => {
   const errors = validationResult(req)
   if (!errors.isEmpty()) {
     return res.status(400).json({ error: errors.array() })
@@ -56,7 +57,7 @@ router.get("/:id", [validId, getProduct], async (req, res) => {
 })
 
 // Update a product information based on ID
-router.patch("/:id", [validId, getProduct], async (req, res) => {
+router.patch("/:id", [validateRequestId, getProduct], async (req, res) => {
   if (req.body.id) {
     delete req.body.id
   }
@@ -73,7 +74,7 @@ router.patch("/:id", [validId, getProduct], async (req, res) => {
 })
 
 // Delete one product by ID
-router.delete("/:id", [validId, getProduct], async (req, res) => {
+router.delete("/:id", [validateRequestId, getProduct], async (req, res) => {
   try {
     const deletedProduct = res.product
     await res.product.remove()
@@ -84,23 +85,5 @@ router.delete("/:id", [validId, getProduct], async (req, res) => {
       .json({ message: "Something went wrong.", errorMessage: error.message })
   }
 })
-
-// middleware function to get product based on ID
-async function getProduct(req, res, next) {
-  let product
-  try {
-    product = await Product.findById(req.params.id)
-    if (product === null) {
-      return res.status(404).json({ message: "Product not found." })
-    }
-  } catch (error) {
-    return res
-      .status(500)
-      .json({ message: "Something went wrong", errorMessage: error.message })
-  }
-
-  res.product = product
-  next()
-}
 
 module.exports = router
