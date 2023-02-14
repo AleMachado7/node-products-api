@@ -58,10 +58,12 @@ router.get("/:id", [validateRequestId, getProduct], async (req, res) => {
 
 // Update a product information based on ID
 router.patch("/:id", [validateRequestId, getProduct], async (req, res) => {
-  if (req.body.id) {
-    delete req.body.id
+  const updateFields = ["title", "description", "price", "category"]
+  for (const field of updateFields) {
+    if (req.body[field]) {
+      res.product[field] = req.body[field]
+    }
   }
-  Object.assign(res.product, req.body)
 
   try {
     const updatedProduct = await res.product.save()
